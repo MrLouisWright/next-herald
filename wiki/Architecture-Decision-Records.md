@@ -15,5 +15,6 @@ Format: [MADR](https://adr.github.io/madr/)-lite. Status values: Proposed · Acc
 | [0009](https://github.com/MrLouisWright/next-herald/blob/main/docs/adr/0009-cli-config-and-route-scan.md) | Config loading and the route manifest | Accepted |
 | [0010](https://github.com/MrLouisWright/next-herald/blob/main/docs/adr/0010-optional-next-tongue-integration.md) | next-tongue integration is optional and structural | Accepted |
 | [0011](https://github.com/MrLouisWright/next-herald/blob/main/docs/adr/0011-og-templates-on-next-og.md) | OG templates are plain JSX on `next/og` | Accepted |
+| [0012](https://github.com/MrLouisWright/next-herald/blob/main/docs/adr/0012-ai-crawler-policy-and-aeo-stance.md) | AI crawler policy by purpose; evidence-based AEO stance | Accepted |
 
 New ADR: copy [template.md](https://github.com/MrLouisWright/next-herald/blob/main/docs/adr/template.md), next number, open a PR labelled `type: adr`.

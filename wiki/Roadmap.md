@@ -3,6 +3,8 @@
 > **Status: pre-alpha.** Dates are not promised. Each milestone ships when its acceptance criteria are met. Tracked in [GitHub milestones](https://github.com/MrLouisWright/next-herald/milestones), issues and the [project board](https://github.com/users/MrLouisWright/projects/8).
 
 > **Scope freeze (2026-10-14):** no new features are added to any milestone before v0.1 ships. v0.1 is intentionally small so it can ship fast.
+>
+> **Amendment (2026-10-14):** the maintainer approved the [SEO/AEO review](https://github.com/MrLouisWright/next-herald/blob/main/docs/seo-aeo-review.md). Its additions are scheduled in v0.2–v0.5 (issues #45–#56). The only v0.1 change is the API shape of the AI-crawler option in #11 (plus docs fixes in #10), because it must be right before it ships. See [AEO stance](https://github.com/MrLouisWright/next-herald/blob/main/docs/aeo.md) and [ADR 0012](https://github.com/MrLouisWright/next-herald/blob/main/docs/adr/0012-ai-crawler-policy-and-aeo-stance.md).
 
 **Constraints for every milestone:** zero dependencies beyond the `next` and `react` peers ([ADR 0002](https://github.com/MrLouisWright/next-herald/blob/main/docs/adr/0002-zero-dependencies.md), [#3](https://github.com/MrLouisWright/next-herald/issues/3)); no request APIs in library code ([ADR 0006](https://github.com/MrLouisWright/next-herald/blob/main/docs/adr/0006-cache-components-safety.md), [#7](https://github.com/MrLouisWright/next-herald/issues/7)); Next.js 16 App Router only ([ADR 0003](https://github.com/MrLouisWright/next-herald/blob/main/docs/adr/0003-nextjs-16-only.md)).
 
@@ -58,11 +60,15 @@ Scope: Config, metadata builders, `<JsonLd>` + 7 types, basic sitemap/robots, CI
   - [ ] Google-required properties are required in types (type tests).
   - [ ] schema-dts `WithContext<T>` values are accepted by `<JsonLd>` (type test with schema-dts as devDependency only).
   - [ ] Each builder's output validated against fixtures captured from the Schema.org validator.
+  - [ ] `faqPage` documented without a rich-result promise (FAQ rich results limited to government/health sites since 2023); no HowTo builder.
+  - [ ] `article`/`organization` accept `{ '@id' }` refs for `author`/`publisher` (forward-compatible with #49).
 - **[#11](https://github.com/MrLouisWright/next-herald/issues/11) defineSitemap (explicit routes) and defineRobots**
   - [ ] Returns native `MetadataRoute.Sitemap`; absolute, deduped, sorted URLs; `exclude` globs.
   - [ ] Dynamic patterns without a `params` enumerator are a type error.
   - [ ] `defineRobots` adds sitemap URLs, locks down when `indexing` is off, validates paths per RFC 9309.
   - [ ] Native `images`/`videos` fields passed through and rendered correctly by Next (e2e).
+  - [ ] AI crawlers split by purpose: `ai: { training, search?, userFetch? }` replaces `aiCrawlers`; `search`/`userFetch` default `'allow'`; dated UA table with source per entry ([Robots](https://github.com/MrLouisWright/next-herald/blob/main/docs/robots.md#ai-crawlers-by-purpose)).
+  - [ ] Robots docs say Google-Extended does not control AI Overviews/AI Mode; point to `nosnippet`/`max-snippet`/`noindex`.
 - **[#12](https://github.com/MrLouisWright/next-herald/issues/12) examples/basic and e2e harness**
   - [ ] `examples/basic` uses every v0.1 API.
   - [ ] Playwright e2e builds with `next build` and asserts head tags, JSON-LD, `/sitemap.xml`, `/robots.txt`.
@@ -77,7 +83,7 @@ Scope: Config, metadata builders, `<JsonLd>` + 7 types, basic sitemap/robots, CI
 ## v0.2 — herald check core
 Goal: The differentiator: a dependency-free `herald check` that catches the most common technical SEO mistakes in CI.
 
-Scope: Zero-dep crawler and head scanner, title/description/canonical/noindex/sitemap/robots rules, herald routes.
+Scope: Zero-dep crawler and head scanner, title/description/canonical/noindex/sitemap/robots rules, no-JS visibility, internal links, Lighthouse-equivalent basics, AI-crawler robots rules, herald routes, entity graph by default.
 
 **Issues and acceptance criteria**
 
@@ -116,12 +122,28 @@ Scope: Zero-dep crawler and head scanner, title/description/canonical/noindex/si
   - [ ] Writes `herald-routes.gen.ts`; `defineSitemap` infers required `params` keys from it (type tests).
   - [ ] `--watch` uses `fs.watch`; no orphaned watchers after exit.
 
+- **[#45](https://github.com/MrLouisWright/next-herald/issues/45) Rules: AI crawler robots**
+  - [ ] Implements robots-blocks-ai-search, robots-ai-inconsistent, robots-ai-list-stale (180-day table age).
+  - [ ] Uses the RFC 9309 matcher from #20; fixtures per rule.
+- **[#46](https://github.com/MrLouisWright/next-herald/issues/46) Rules: no-JS visibility**
+  - [ ] Scanner extracts visible `<main>`/`<article>` text (HTTP only, no browser).
+  - [ ] Implements content-js-only (default < 50 words), content-bot-parity (bot vs browser UA), metadata-in-body.
+  - [ ] Fixtures per rule.
+- **[#47](https://github.com/MrLouisWright/next-herald/issues/47) Rules: internal links**
+  - [ ] Implements link-broken (4xx/5xx) and link-redirect; targets fetched once.
+- **[#48](https://github.com/MrLouisWright/next-herald/issues/48) Rules: Lighthouse-equivalent page basics**
+  - [ ] Implements http-status-indexable, viewport-missing, anchor-not-crawlable; each mapped to the Lighthouse audit it mirrors.
+- **[#49](https://github.com/MrLouisWright/next-herald/issues/49) Entity graph by default (moved from v0.4)**
+  - [ ] `defineHerald({ organization | person, sameAs })` validated; stable `@id`s (`/#organization`, `/#person`, `/#website`, `#webpage`).
+  - [ ] `jsonLd.siteGraph`, `jsonLd.ref`, `graph()` with dangling-id dev errors; `person` builder.
+  - [ ] Same config → identical entity nodes on every page (snapshot).
+
 **Exit criteria:** `herald check --build` on the examples reports zero errors, and each rule has a failing fixture that it catches.
 
 ## v0.3 — Large sites & i18n
 Goal: Sites with >50k URLs, news publishers and multilingual sites.
 
-Scope: Sitemap index splitting, news sitemaps, hreflang, next-tongue adapter, hreflang rules, static export.
+Scope: Sitemap index splitting, news sitemaps, hreflang, next-tongue adapter, hreflang rules, static export, accurate lastmod.
 
 **Issues and acceptance criteria**
 
@@ -147,11 +169,15 @@ Scope: Sitemap index splitting, news sitemaps, hreflang, next-tongue adapter, hr
 - **[#28](https://github.com/MrLouisWright/next-herald/issues/28) Static export compatibility e2e**
   - [ ] `examples/static-export` builds with `output: 'export'` including sitemap index via `force-static` route handlers, or the fallback `herald build --emit-xml` is implemented and documented.
   - [ ] `herald check --dir out` passes.
+- **[#50](https://github.com/MrLouisWright/next-herald/issues/50) Accurate lastmod and lastmod rules**
+  - [ ] `herald routes --git-lastmod` writes commit dates at build time (`node:child_process`, no dep); clear error on shallow clones.
+  - [ ] Implements lastmod-future, lastmod-uniform (≥ 90% identical), lastmod-mismatch (> 1 day vs JSON-LD/OG).
+  - [ ] Never defaults to build time.
 
 ## v0.4 — OG images & structured data checks
 Goal: Social previews and structured data validation.
 
-Scope: OG templates, OG and JSON-LD rules, schema types batch 2, SARIF.
+Scope: OG templates, OG and JSON-LD rules, citation-friendly structure and entity rules, schema types batch 2, SARIF.
 
 **Issues and acceptance criteria**
 
@@ -169,16 +195,21 @@ Scope: OG templates, OG and JSON-LD rules, schema types batch 2, SARIF.
   - [ ] Implements jsonld-parse, jsonld-type, jsonld-required, jsonld-recommended for all built-in types.
   - [ ] Docs state these are a subset of Google's checks.
 - **[#33](https://github.com/MrLouisWright/next-herald/issues/33) Schema types and builders batch 2**
-  - [ ] newsArticle, person, localBusiness, event, videoObject, softwareApplication, recipe, jobPosting with required-field type tests.
-  - [ ] `graph()` with `@id` references.
+  - [ ] newsArticle, localBusiness, event, videoObject, softwareApplication, recipe, jobPosting with required-field type tests.
+  - [ ] ~~`graph()` with `@id` references~~ and `person`: moved to #49 (v0.2).
 - **[#34](https://github.com/MrLouisWright/next-herald/issues/34) SARIF output and GitHub Action recipe**
   - [ ] `--format sarif` validates against SARIF 2.1.0 schema in tests.
   - [ ] Docs recipe uploads to GitHub code scanning.
+- **[#51](https://github.com/MrLouisWright/next-herald/issues/51) Rules: citation-friendly structure**
+  - [ ] Implements h1-missing, h1-multiple, heading-order, img-alt-missing, jsonld-date-missing, jsonld-author, jsonld-visible-mismatch.
+  - [ ] Docs: consistency checks, not ranking or citation factors.
+- **[#52](https://github.com/MrLouisWright/next-herald/issues/52) Rules: entity consistency**
+  - [ ] Implements jsonld-entity-id, sameas-inconsistent, jsonld-deprecated-type.
 
 ## v0.5 — Adoption
 Goal: Make adoption easy and back the README with published numbers.
 
-Scope: herald init, verified migration guides, published size and perf report.
+Scope: herald init, herald indexnow, verified migration guides, published size and perf report, AI referral docs; experimental markdown alternates and llms.txt.
 
 **Issues and acceptance criteria**
 
@@ -195,6 +226,17 @@ Scope: herald init, verified migration guides, published size and perf report.
   - [ ] Script measures client JS added (expected 0) and server bundle size per entry point.
   - [ ] `herald check` time and memory on a 10k-page fixture published with hardware notes.
   - [ ] Reproducible via one command.
+- **[#53](https://github.com/MrLouisWright/next-herald/issues/53) herald indexnow CLI**
+  - [ ] Diffs current vs previous sitemap snapshot; POSTs to api.indexnow.org in ≤ 10,000-URL batches with global `fetch`.
+  - [ ] Static key file (`--init-key` → `public/<key>.txt`); indexnow-key-missing rule; mock-endpoint tests.
+- **[#54](https://github.com/MrLouisWright/next-herald/issues/54) Experimental: markdown alternates**
+  - [ ] `markdownRoute` (`force-static`, params only) and `markdownAlternate`; md-alternate-broken rule.
+  - [ ] Accept negotiation only as a `proxy.ts` recipe; `examples/cache-components` stays static.
+- **[#55](https://github.com/MrLouisWright/next-herald/issues/55) Experimental: llms.txt / llms-full.txt**
+  - [ ] `defineLlmsTxt` / `defineLlmsFullTxt`, off by default; docs state no proven visibility benefit.
+  - [ ] llms-txt-invalid rule (absence never reported).
+- **[#56](https://github.com/MrLouisWright/next-herald/issues/56) Docs: AI referral and citation measurement**
+  - [ ] Referrer/UTM recipe; Search Console "Web" note; Bing AI Performance report; log-based AI bot counts.
 
 ## v0.9 — Beta (API freeze)
 Goal: Freeze the API and rule IDs; harden.
@@ -239,4 +281,6 @@ Scope: next-seo and next-sitemap codemods.
   - [ ] Removes the postbuild script with a confirmation prompt.
 
 ## Not planned
-See [rejected ideas](https://github.com/MrLouisWright/next-herald/blob/main/docs/research.md#rejected-ideas): head components, postbuild files in `public/`, headless browser crawling, request-derived URLs, Pages Router.
+See [rejected ideas](https://github.com/MrLouisWright/next-herald/blob/main/docs/research.md#rejected-ideas): head components, postbuild files in `public/`, headless browser crawling, request-derived URLs, Pages Router. AEO hype rejected: [research](https://github.com/MrLouisWright/next-herald/blob/main/docs/research.md#aeo-rejected-and-hype) (GEO scores, `speakable`, HowTo, Indexing API for ordinary pages, Accept negotiation in library code).
+
+Considered, not scheduled: Content-Signal / Content-Usage passthrough in robots.txt ([AEO stance](https://github.com/MrLouisWright/next-herald/blob/main/docs/aeo.md#considered-not-scheduled)).

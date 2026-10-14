@@ -13,6 +13,7 @@
 - [[Cache Components and PPR|Cache-Components-and-PPR]]
 - [[Static Export|Static-Export]]
 - [[Testing|Testing]]
+- [[AEO Stance|AEO-Stance]]
 - [[Migration from next seo|Migration-from-next-seo]]
 - [[Migration from next sitemap|Migration-from-next-sitemap]]
 
@@ -24,5 +25,6 @@
 - [[Security|Security]]
 - [[Research|Research]]
 - [[Critical Review|Critical-Review]]
+- [[SEO AEO Review|SEO-AEO-Review]]
 - [[Roadmap|Roadmap]]
 - [[Architecture Decision Records|Architecture-Decision-Records]]

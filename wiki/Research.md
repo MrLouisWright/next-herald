@@ -1,6 +1,6 @@
 # Research: competitors and Next.js metadata issues (October 2026)
 
-Checked 2026-10-14. Weekly downloads from `https://api.npmjs.org/downloads/point/last-week/<pkg>` for 2026-10-06 → 2026-10-12. Release dates from the npm registry. Every link was opened during this review.
+Checked 2026-10-14 (AEO sections added the same day after the [SEO/AEO review](SEO-AEO-Review)). Weekly downloads from `https://api.npmjs.org/downloads/point/last-week/<pkg>` for 2026-10-06 → 2026-10-12. Release dates from the npm registry. Every link was opened during this review.
 
 ## Download numbers
 
@@ -50,8 +50,21 @@ Open upstream issues (all open on 2026-10-14):
 - [react-schemaorg](https://www.npmjs.com/package/react-schemaorg): small JSON-LD component on schema-dts types.
 - Validators: [Rich Results Test](https://search.google.com/test/rich-results), [Schema.org validator](https://validator.schema.org/) — web tools, not CI. Lighthouse SEO audits run a browser per page.
 
+### Beyond Next.js: Nuxt SEO, Astro, WordPress (added 2026-10-14)
+Full matrix and sources: [SEO/AEO review](SEO-AEO-Review).
+- **Nuxt SEO** is the best-in-class benchmark (@nuxtjs/seo 124,014/wk; @nuxtjs/sitemap 306,316; @nuxtjs/robots 259,772; nuxt-schema-org 175,745; nuxt-og-image 182,419; nuxt-llms 43,857): [sitemap](https://nuxtseo.com/docs/sitemap/getting-started/introduction), [robots](https://nuxtseo.com/docs/robots/getting-started/introduction) with [AI directives](https://nuxtseo.com/docs/robots/guides/ai-directives) (Content-Signal and Content-Usage), [schema.org graph with `@id` linking](https://nuxtseo.com/docs/schema-org/getting-started/introduction), [link checker](https://nuxtseo.com/docs/link-checker/getting-started/introduction), [nuxt-llms](https://github.com/nuxt-content/nuxt-llms). next-herald aims at Nuxt SEO parity for Next.js.
+- **Astro:** [@astrojs/sitemap](https://docs.astro.build/en/guides/integrations-guide/sitemap/) (3,814,836/wk) with sitemap index and i18n; meta via community packages (astro-seo 103,492/wk).
+- **WordPress:** Yoast SEO Premium has [Bot Blocker](https://yoast.com/features/bot-blocker/) toggles (GPTBot, CCBot, Google-Extended) and [IndexNow](https://yoast.com/what-is-indexnow/); Rank Math has [IndexNow](https://rankmath.com/kb/how-to-use-indexnow/) in the free plugin; both generate llms.txt ([Yoast](https://yoast.com/llms-txt/), [Rank Math](https://rankmath.com/kb/llms-txt/)).
+- **Lighthouse** (5,404,521/wk) and **unlighthouse** (40,625/wk) run [SEO audits](https://developer.chrome.com/docs/lighthouse/seo/) but need Chrome; `herald check` covers equivalents over HTTP ([#47](https://github.com/MrLouisWright/next-herald/issues/47), [#48](https://github.com/MrLouisWright/next-herald/issues/48)).
+
+## AEO stance
+Summary; details in [AEO stance](AEO-Stance) and [ADR 0012](https://github.com/MrLouisWright/next-herald/blob/main/docs/adr/0012-ai-crawler-policy-and-aeo-stance.md).
+- **Works (documented by engines):** crawlable server HTML; AI search bots allowed (OpenAI: OAI-SearchBot opt-out means not "shown in ChatGPT search answers"); normal Google Search eligibility for AI Overviews/AI Mode; accurate dates; entity markup that matches visible content; IndexNow for Bing and other IndexNow engines.
+- **Unproven (experimental opt-ins, v0.5):** llms.txt / llms-full.txt, markdown alternates.
+- **Hype:** see below.
+
 ## Positioning derived from this
-A Next 16 App Router–only kit that **returns native objects**, fills the native gaps (index, news, deep merge, safe JSON-LD, hreflang), and ships a dependency-free **CI checker**. Not: "faster", "better rankings", or "replaces Next metadata".
+A Next 16 App Router–only kit that **returns native objects**, fills the native gaps (index, news, deep merge, safe JSON-LD, hreflang), and ships a dependency-free **CI checker** (a headless-free Lighthouse-SEO alternative for CI). It keeps sites legible to AI search with purpose-split crawler rules, an entity graph and no-JS visibility checks. Not: "faster", "better rankings", "gets you cited by AI", or "replaces Next metadata".
 
 ## Rejected ideas
 | Idea | Why rejected |
@@ -68,3 +81,22 @@ A Next 16 App Router–only kit that **returns native objects**, fills the nativ
 | Patching Next router bugs (e.g. #98684) client-side | Fragile, fights the framework; report upstream instead |
 | Pages Router / Next 15 support | ADR 0003 |
 | Keyword density / content scoring rules | Not reliable signals; noise in CI |
+
+## AEO: rejected and hype
+From the [SEO/AEO review](SEO-AEO-Review#3-rejected--hype), verified 2026-10-14.
+
+| Idea | Verdict | Reason |
+|---|---|---|
+| llms.txt as a ranking/citation lever | Hype (shipped only as an experimental opt-in, [#55](https://github.com/MrLouisWright/next-herald/issues/55)) | A proposal ([llmstxt.org](https://llmstxt.org/)) with no standards body; no major AI search engine documents using it. Google's John Mueller: "AFAIK none of the AI services have said they're using LLMs.TXT … it's comparable to the keywords meta tag" ([SEJ](https://www.searchenginejournal.com/google-says-llms-txt-comparable-to-keywords-meta-tag/544804/)). Google: "You don't need to create new machine readable files, AI text files, or markup" ([AI features](https://developers.google.com/search/docs/appearance/ai-features)). |
+| "GEO scoring" / AI-visibility scores | Reject | Not measurable from HTML; same reason as keyword density. |
+| `speakable` schema | Reject | Beta, limited to news publishers in English in the US, aimed at Google Assistant ([speakable](https://developers.google.com/search/docs/appearance/structured-data/speakable)). |
+| HowTo builder | Reject | HowTo rich results removed ([2023](https://developers.google.com/search/blog/2023/08/howto-faq-changes)). |
+| Marketing FAQPage as a rich-result win | Reject | FAQ rich results limited to well-known government and health sites since 2023; builder kept without the promise. |
+| Google Indexing API for ordinary pages | Reject | Officially limited to `JobPosting` and `BroadcastEvent` in `VideoObject` ([quickstart](https://developers.google.com/search/apis/indexing-api/v3/quickstart)); needs a service-account credential. |
+| Blocking Google-Extended to "stay out of AI Overviews" | Reject as advice | AI Overviews use Googlebot ([AI features](https://developers.google.com/search/docs/appearance/ai-features)). |
+| Accept-header negotiation in library code | Reject | Reads request headers (ADR 0006). `proxy.ts` recipe only ([AEO stance](AEO-Stance#recipe-accept-negotiation-in-proxyts-experimental)). |
+| AI-generated FAQ blocks / "answer-first" rewriting | Reject | Content generation is out of scope; risks scaled-content spam policies. |
+| Pay-per-crawl integration | Reject (out of scope) | CDN-level feature, not something a framework library can enforce. |
+| robots.txt as enforcement against bots | Reject the claim | Compliance is voluntary; use WAF/bot management. |
+| Headless rendering to "see what AI sees" | Reject | Most AI crawlers do not render JS, so raw server HTML *is* what they see (ADR 0008). |
+| A single `aiCrawlers` toggle | Replaced | Merged training, search and user-fetch bots; blocking "AI" wholesale would also remove a site from AI search answers ([ADR 0012](https://github.com/MrLouisWright/next-herald/blob/main/docs/adr/0012-ai-crawler-policy-and-aeo-stance.md)). |
