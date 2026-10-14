@@ -16,8 +16,13 @@
 | `trailingSlash` | `boolean` | from `next.config` value passed here | Must match `next.config`; `herald check` flags canonicals that redirect. |
 | `i18n` | `I18nSource` | — | See [hreflang & i18n](i18n-hreflang.md). |
 | `indexing` | `'auto' \| 'on' \| 'off'` | `'auto'` | `auto`: `off` unless `HERALD_ENV=production` (or `VERCEL_ENV=production`), evaluated at build. When off, every page gets `robots: noindex` and `robots.txt` disallows all. |
+| `organization` | `{ name, url?, logo?, sameAs?: string[] }` | — | Publisher entity for the default graph (`${siteUrl}/#organization`). Exclusive with `person`. v0.2 ([JSON-LD](json-ld.md#entity-graph-by-default-v02)). |
+| `person` | `{ name, url?, image?, sameAs?: string[] }` | — | Personal-site entity (`${siteUrl}/#person`). Exclusive with `organization`. v0.2. |
+| `indexNow` | `{ key?: string; keyPath?: string; endpoint?: string }` | — | Used by `herald indexnow` only (CLI, v0.5). `key` falls back to `HERALD_INDEXNOW_KEY`; the key is public by design (served as a file). |
 | `app` | `{ dir?, pageExtensions? }` | `{ dir: 'app' }` | Used by `herald routes`. Supports `src/app`. |
 | `check` | `CheckConfig` | — | Rule severities, thresholds, ignore globs. See [CLI](cli.md). |
+
+AI crawler policy is set on `defineRobots({ ai })`, not here ([Robots](robots.md#ai-crawlers-by-purpose)).
 
 Validation errors are thrown at import time with the option path, e.g. `herald: siteUrl must be absolute (got "/").`
 

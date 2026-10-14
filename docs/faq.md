@@ -8,6 +8,12 @@ You should — next-herald returns native objects. It adds config-wide defaults,
 ### Is next-herald faster / does it improve rankings?
 No such claim. It helps you avoid technical SEO mistakes; rankings depend on much more. Bundle-size numbers will be published with reproducible scripts (v0.5).
 
+### Will it get my site cited by ChatGPT, Perplexity or AI Overviews?
+No such claim, and no "GEO score". It checks the things engines document: server-rendered content, AI search bots allowed, accurate dates, consistent entity markup. llms.txt and markdown alternates are experimental opt-ins with no proven benefit. See [AEO stance](aeo.md).
+
+### Does blocking Google-Extended keep me out of AI Overviews?
+No. AI Overviews and AI Mode use Googlebot; Google-Extended only covers Gemini/Vertex training and grounding. Use `nosnippet`/`max-snippet`/`noindex` ([Robots](robots.md#google-extended-is-not-an-ai-overviews-opt-out)).
+
 ### Why zero dependencies?
 Supply-chain surface and maintenance ([ADR 0002](adr/0002-zero-dependencies.md)). The trade-off: we own a small head scanner and XML writer.
 

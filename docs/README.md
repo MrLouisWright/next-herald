@@ -8,14 +8,15 @@
 3. [Metadata](metadata.md)
 4. [JSON-LD structured data](json-ld.md)
 5. [Sitemaps](sitemaps.md)
-6. [Robots](robots.md)
+6. [Robots (incl. AI crawlers by purpose)](robots.md)
 7. [hreflang & i18n (incl. next-tongue)](i18n-hreflang.md)
 8. [OG images](og-images.md)
 9. [CLI and `herald check` rules](cli.md)
 10. [Cache Components & PPR](cache-components.md)
 11. [Static export](static-export.md)
 12. [Testing](testing.md)
-13. Migration: [from next-seo](migration/next-seo.md) · [from next-sitemap](migration/next-sitemap.md)
+13. [AEO stance: answer engines and AI search](aeo.md)
+14. Migration: [from next-seo](migration/next-seo.md) · [from next-sitemap](migration/next-sitemap.md)
 
 ## Reference
 - [API reference](api-reference.md)
@@ -26,6 +27,7 @@
 - [Security](security.md)
 - [Research: competitors and Next.js metadata issues (Oct 2026)](research.md)
 - [Critical review (Oct 2026)](review.md)
+- [SEO and AEO/GEO review (Oct 2026)](seo-aeo-review.md)
 
 ## Package entry points (planned)
 
@@ -38,7 +40,8 @@
 | `next-herald/robots` | `robots.ts` | `defineRobots` |
 | `next-herald/i18n` | Server | `alternates`, `fromTongue` |
 | `next-herald/og` | `opengraph-image.tsx` | `ogImage`, templates |
+| `next-herald/experimental` | route handlers (v0.5, opt-in) | `markdownRoute`, `markdownAlternate`, `defineLlmsTxt`, `defineLlmsFullTxt` |
 | `next-herald/testing` | tests | `checkHtml`, `renderMetadata` |
-| `herald` (bin) | Node built-ins only | `init`, `routes`, `build`, `check` |
+| `herald` (bin) | Node built-ins only | `init`, `routes`, `build`, `check`, `indexnow` |
 
 The package has **zero dependencies** beyond the `next` and `react` peers ([ADR 0002](adr/0002-zero-dependencies.md)).

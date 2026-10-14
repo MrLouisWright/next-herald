@@ -22,7 +22,7 @@ herald check ─► fetch (server) | fs (out/) ─► head scanner ─► page m
 
 ## CLI
 - `node:util` `parseArgs`; config loading by dynamic `import()` (type stripping on Node ≥ 22.18).
-- **Head scanner**: a streaming tokenizer that reads until `</head>` (or the first `<body>` content, plus body `<script type="application/ld+json">` and `<a href>` for link discovery). It handles comments, CDATA, unquoted attributes and entity decoding for the attributes we read. It is not an HTML5-spec parser; fuzzed against a corpus of real Next output and malformed HTML.
+- **Head scanner**: a streaming tokenizer that reads until `</head>` (or the first `<body>` content, plus body `<script type="application/ld+json">` and `<a href>` for link discovery). From v0.2 it also extracts visible text, headings, `<img alt>` and `<main>`/`<article>` boundaries from the body for the no-JS and structure rules ([#46](https://github.com/MrLouisWright/next-herald/issues/46), [#51](https://github.com/MrLouisWright/next-herald/issues/51)). It handles comments, CDATA, unquoted attributes and entity decoding for the attributes we read. It is not an HTML5-spec parser; fuzzed against a corpus of real Next output and malformed HTML.
 - **Crawler**: bounded queue (`--concurrency`), per-request timeout via `AbortController`, redirects tracked manually (`redirect: 'manual'`), `robots.txt` parsed per RFC 9309, gzip handled by `fetch`/`zlib`.
 - **Page model** → **rules** (pure functions over pages + site graph) → **reporters** (`pretty`, `json`, `github`, `sarif`).
 - Image header readers (PNG IHDR, JPEG SOFn, WebP VP8/VP8L/VP8X, GIF) use `Range: bytes=0-65535` when supported.

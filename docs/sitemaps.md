@@ -18,6 +18,14 @@ Route groups `(marketing)` are removed, `@slot`, intercepting `(.)` routes, `_pr
 - URLs are absolute (from `siteUrl`), deduplicated and sorted; `trailingSlash` is applied;
 - pages with `noindex` must be excluded by you; `herald check` reports `sitemap-noindex` if one slips in.
 
+## Accurate `lastModified` (v0.3)
+Google uses `lastmod` only if it is "consistently and verifiably accurate" ([Google](https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap)), so next-herald never stamps build time ([#50](https://github.com/MrLouisWright/next-herald/issues/50)). Sources, best first:
+1. Your content's `updatedAt` from `entry()`; use the same value for JSON-LD `dateModified` and `article:modified_time`.
+2. `herald routes --git-lastmod`: the route file's last commit date (`git log -1 --format=%cI`), written to `herald-routes.gen.ts` at build time. Good for static pages; needs full history (not a shallow clone) and is wrong for data-driven pages.
+3. Omit `lastModified`.
+
+`herald check` reports `lastmod-future`, `lastmod-uniform` (≥ 90% identical: build-time stamping) and `lastmod-mismatch` (sitemap vs JSON-LD/OG by more than a day).
+
 ## Images and videos
 Native: each entry accepts `images: string[]` and `videos: [...]` (Next renders `image:` / `video:` namespaces). Helpers `sitemapImage()` / `sitemapVideo()` validate required video fields (`title`, `thumbnail_loc`, `description`, content or player URL) per [Google](https://developers.google.com/search/docs/crawling-indexing/sitemaps/video-sitemaps).
 

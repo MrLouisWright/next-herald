@@ -7,9 +7,10 @@ The `herald` binary uses Node built-ins only ([ADR 0002](adr/0002-zero-dependenc
 | Command | Since | Purpose |
 |---|---|---|
 | `herald init [--large] [--i18n]` | v0.5 | Scaffold `herald.config.ts`, `app/sitemap.ts`, `app/robots.ts` (`--large`: index + chunks) |
-| `herald routes [--watch]` | v0.2 | Scan `app/`, write `herald-routes.gen.ts` |
+| `herald routes [--watch] [--git-lastmod]` | v0.2 (`--git-lastmod` v0.3) | Scan `app/`, write `herald-routes.gen.ts`; `--git-lastmod` adds each route file's last commit date at build time ([#50](https://github.com/MrLouisWright/next-herald/issues/50)) |
 | `herald build` | v0.2 | `routes` + config validation; use in `prebuild` |
 | `herald check` | v0.2 | Crawl and report |
+| `herald indexnow [--changed --previous <file>] [--urls <file>] [--dry-run] [--init-key]` | v0.5 | Submit changed sitemap URLs to IndexNow ([#53](https://github.com/MrLouisWright/next-herald/issues/53)) |
 
 ## `herald check`
 ```bash
@@ -20,6 +21,13 @@ herald check --build                            # next build && next start on a 
 Options: `--seed /path` (repeatable), `--max-pages 5000`, `--concurrency 8`, `--timeout 10000`, `--format pretty|json|github|sarif`, `--env production|preview`, `--rule id=off|info|warn|error`, `--ignore '/drafts/**'`, `--ignore-robots`, `--ua bot|browser|<string>` (default `bot`, a UA matched by Next's `htmlLimitedBots`), `--site-url` (when crawling a preview URL for a production config: rewrites canonical/hreflang host comparison).
 
 Seeds: `/`, `robots.txt` → sitemaps (index → chunks), `--seed`s, then same-origin links. It reads server HTML only, never `.next/` ([ADR 0008](adr/0008-check-crawls-http.md)). Exit code: 1 if any `error`, 2 on crawl failure (e.g. server unreachable), else 0.
+
+## `herald indexnow` (v0.5)
+CLI only; nothing runs in your app at request time. It diffs the current sitemap(s) against a snapshot from the previous build (`--previous`), and POSTs added or changed URLs to `https://api.indexnow.org/indexnow` with global `fetch`, in batches of at most 10,000 URLs ([IndexNow](https://www.indexnow.org/documentation)). The key comes from `indexNow.key` or `HERALD_INDEXNOW_KEY`. `--init-key` writes `public/<key>.txt` so the key file is a static asset. IndexNow is used by Bing, Yandex, Seznam, Naver and others; **Google does not use it**. `indexnow-key-missing` checks that the key file is served.
+
+```bash
+herald indexnow --changed --previous .herald/sitemap-prev.json   # after deploy
+```
 
 ## Rules
 Severity is the default; override in `check.rules` config or `--rule`. IDs are stable from v0.9.
@@ -51,6 +59,20 @@ Severity is the default; override in `check.rules` config or `--rule`. IDs are s
 | `robots-blocks-sitemap-url` | error | v0.2 | robots.txt disallows a URL listed in a sitemap |
 | `robots-blocks-noindex` | warn | v0.2 | Disallowed URL relies on `noindex` (never seen by crawlers) |
 | `robots-sitemap-host` | warn | v0.2 | `Sitemap:` line on another host |
+| `content-js-only` | warn | v0.2 | Indexable page whose server HTML has fewer than N words of body text (default 50): bots that don't run JS see an empty page ([#46](https://github.com/MrLouisWright/next-herald/issues/46)) |
+| `content-bot-parity` | warn | v0.2 | Bot-UA and browser-UA HTML differ materially in title, meta, canonical or body text (catches `htmlLimitedBots` regressions) ([#46](https://github.com/MrLouisWright/next-herald/issues/46)) |
+| `metadata-in-body` | warn | v0.2 | `<title>`, canonical or description streamed outside `<head>` for a crawler UA ([#46](https://github.com/MrLouisWright/next-herald/issues/46)) |
+| `link-broken` | error | v0.2 | Same-origin link returns 4xx/5xx ([#47](https://github.com/MrLouisWright/next-herald/issues/47)) |
+| `link-redirect` | info | v0.2 | Internal link hits a redirect ([#47](https://github.com/MrLouisWright/next-herald/issues/47)) |
+| `http-status-indexable` | error | v0.2 | Page in a sitemap or linked internally returns non-200 ([#48](https://github.com/MrLouisWright/next-herald/issues/48)) |
+| `viewport-missing` | warn | v0.2 | No `meta name=viewport` ([#48](https://github.com/MrLouisWright/next-herald/issues/48)) |
+| `anchor-not-crawlable` | warn | v0.2 | `<a>` without `href` or with a `javascript:` href ([#48](https://github.com/MrLouisWright/next-herald/issues/48)) |
+| `robots-blocks-ai-search` | warn | v0.2 | robots.txt blocks OAI-SearchBot / Claude-SearchBot / PerplexityBot (also via `*`) while `ai.search` is `allow` or unset ([#45](https://github.com/MrLouisWright/next-herald/issues/45)) |
+| `robots-ai-inconsistent` | info | v0.2 | Training bots allowed but AI search bots blocked (usually the inverse of intent) ([#45](https://github.com/MrLouisWright/next-herald/issues/45)) |
+| `robots-ai-list-stale` | info | v0.2 | Bundled AI user-agent table older than 180 days ([#45](https://github.com/MrLouisWright/next-herald/issues/45)) |
+| `lastmod-future` | error | v0.3 | Sitemap `lastmod` in the future ([#50](https://github.com/MrLouisWright/next-herald/issues/50)) |
+| `lastmod-uniform` | warn | v0.3 | ≥ 90% of sitemap entries share one `lastmod` (build-time stamping) ([#50](https://github.com/MrLouisWright/next-herald/issues/50)) |
+| `lastmod-mismatch` | warn | v0.3 | Sitemap `lastmod` differs from JSON-LD `dateModified` / `article:modified_time` by > 1 day ([#50](https://github.com/MrLouisWright/next-herald/issues/50)) |
 | `hreflang-code` | error | v0.3 | Invalid language/region code |
 | `hreflang-self` | error | v0.3 | Page's alternates do not include itself |
 | `hreflang-reciprocal` | error | v0.3 | A → B but B does not list A |
@@ -68,8 +90,23 @@ Severity is the default; override in `check.rules` config or `--rule`. IDs are s
 | `og-image-type` | warn | v0.4 | Not PNG/JPEG/WebP/GIF |
 | `og-image-alt` | info | v0.4 | No `og:image:alt` |
 | `html-lang` | warn | v0.3 | Missing `<html lang>` or it differs from the page's hreflang |
+| `h1-missing` | info | v0.4 | No `<h1>` ([#51](https://github.com/MrLouisWright/next-herald/issues/51)) |
+| `h1-multiple` | info | v0.4 | More than one `<h1>` ([#51](https://github.com/MrLouisWright/next-herald/issues/51)) |
+| `heading-order` | info | v0.4 | Skipped heading levels ([#51](https://github.com/MrLouisWright/next-herald/issues/51)) |
+| `img-alt-missing` | info | v0.4 | `<img>` without `alt` in main content ([#51](https://github.com/MrLouisWright/next-herald/issues/51)) |
+| `jsonld-date-missing` | info | v0.4 | Article without `dateModified` ([#51](https://github.com/MrLouisWright/next-herald/issues/51)) |
+| `jsonld-author` | warn | v0.4 | Article `author` missing, or a string instead of Person/Organization with `name` ([#51](https://github.com/MrLouisWright/next-herald/issues/51)) |
+| `jsonld-visible-mismatch` | warn | v0.4 | JSON-LD `headline`/`name` absent from visible h1/title; Product price absent from text ([#51](https://github.com/MrLouisWright/next-herald/issues/51)) |
+| `jsonld-entity-id` | info | v0.4 | Organization/Person without a stable `@id`, or different `@id`s across pages ([#52](https://github.com/MrLouisWright/next-herald/issues/52)) |
+| `sameas-inconsistent` | warn | v0.4 | Organization `sameAs` differs between pages, or a `sameAs` URL is non-200 ([#52](https://github.com/MrLouisWright/next-herald/issues/52)) |
+| `jsonld-deprecated-type` | info | v0.4 | HowTo present; FAQPage on a site that gets no FAQ rich result ([#52](https://github.com/MrLouisWright/next-herald/issues/52)) |
+| `md-alternate-broken` | error | v0.5 | `rel=alternate type=text/markdown` target non-200 or wrong content type (experimental, [#54](https://github.com/MrLouisWright/next-herald/issues/54)) |
+| `llms-txt-invalid` | warn | v0.5 | `/llms.txt` present but not in the llmstxt.org shape, or its links non-200. Absence is never reported (experimental, [#55](https://github.com/MrLouisWright/next-herald/issues/55)) |
+| `indexnow-key-missing` | warn | v0.5 | IndexNow configured but the key file is not served ([#53](https://github.com/MrLouisWright/next-herald/issues/53)) |
 
-Limits: no JavaScript execution; content injected client-side is invisible (as for many crawlers). Image dimensions are read from file headers; animated/complex formats may be reported as `og-image-type`.
+These 27 rules (from `content-js-only` to `lastmod-mismatch` and `h1-missing` to `indexnow-key-missing`) were added by the [SEO/AEO review](seo-aeo-review.md). The structure rules are consistency checks, not ranking or citation factors.
+
+Limits: no JavaScript execution, on purpose: content injected client-side is invisible, as it is for most AI crawlers ([Vercel, Dec 2024](https://vercel.com/blog/the-rise-of-the-ai-crawler)). `content-js-only` and `content-bot-parity` make that visible. Image dimensions are read from file headers; animated/complex formats may be reported as `og-image-type`.
 
 ## GitHub Actions
 ```yaml
