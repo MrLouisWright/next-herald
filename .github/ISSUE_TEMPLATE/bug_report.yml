@@ -1,0 +1,23 @@
+name: Bug report
+description: Something doesn't work as documented
+labels: ["type: bug"]
+body:
+  - type: markdown
+    attributes:
+      value: "next-herald is pre-alpha. Docs bugs (inconsistencies, inaccuracies) are welcome too."
+  - type: textarea
+    id: what
+    attributes: { label: What happened?, description: Include expected vs actual behaviour. }
+    validations: { required: true }
+  - type: textarea
+    id: repro
+    attributes: { label: Reproduction, description: Minimal repo or steps. Include herald.config.ts and the URL or HTML involved. }
+    validations: { required: true }
+  - type: input
+    id: versions
+    attributes: { label: Versions, placeholder: "next-herald x.y.z, next 16.x, react 19.x, node 22" }
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options: [metadata, jsonld, sitemap, robots, i18n, og, check, cli, docs, other]

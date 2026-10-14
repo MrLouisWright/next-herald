@@ -1,0 +1,1 @@
+next-herald is **pre-alpha** — all APIs are planned. Canonical docs: [`docs/`](https://github.com/MrLouisWright/next-herald/blob/main/docs/README.md) · [MIT](https://github.com/MrLouisWright/next-herald/blob/main/LICENSE) © 2026 Louis Wright
