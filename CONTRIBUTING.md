@@ -24,7 +24,7 @@ pnpm changeset
 ```
 Repo layout (planned): `packages/next-herald` (the one published package), `examples/*`, `test/fixtures/`, `docs/`, `wiki/` (mirror of the GitHub wiki).
 
-**Scope freeze:** no new features are accepted before v0.1 ships ([ROADMAP](ROADMAP.md)).
+**Scope freeze:** no new features are accepted before v0.1 ships ([ROADMAP](ROADMAP.md)). The maintainer-approved SEO/AEO additions of 2026-10-14 are already scheduled for v0.2+.
 
 ## Pull requests
 - One logical change per PR; link the issue (`Closes #123`).

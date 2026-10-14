@@ -25,7 +25,16 @@ Details and sources: [Research](docs/research.md).
 
 ## Positioning
 
-> next-herald is a Next.js 16 App Router–only SEO kit that returns **native** `Metadata`, `MetadataRoute.Sitemap`/`Robots` and `ImageResponse` objects, fills the gaps Next leaves (sitemap index, news sitemaps, deep merging, hreflang, XSS-safe JSON-LD), and ships `herald check`, a dependency-free CI crawler for technical SEO mistakes. It is pre-alpha. It makes no ranking or performance claims; bundle sizes will be published with reproducible scripts.
+> next-herald is a Next.js 16 App Router–only SEO kit that returns **native** `Metadata`, `MetadataRoute.Sitemap`/`Robots` and `ImageResponse` objects, fills the gaps Next leaves (sitemap index, news sitemaps, deep merging, hreflang, XSS-safe JSON-LD), and ships `herald check`, a dependency-free CI crawler for technical SEO mistakes: a headless-free alternative to Lighthouse SEO audits in CI. It also keeps your site legible to AI search: purpose-split AI crawler rules, an entity graph, and checks that what bots see without JavaScript is what users see. It aims at [Nuxt SEO](https://nuxtseo.com/) parity for Next.js. It is pre-alpha. It makes **no ranking or AI-citation claims** and no performance claims; bundle sizes will be published with reproducible scripts.
+
+## AEO stance (evidence-based)
+
+"Answer engine optimization" is mostly marketing. next-herald only builds what engines document ([AEO stance](docs/aeo.md), [ADR 0012](docs/adr/0012-ai-crawler-policy-and-aeo-stance.md)):
+
+- **Does:** server-HTML visibility checks (most AI crawlers don't run JS); AI crawlers split into **training / search / user-fetch**, with search allowed by default, because OpenAI says sites that block OAI-SearchBot "will not be shown in ChatGPT search answers"; entity graph with stable `@id`s; accurate `lastmod`; IndexNow.
+- **Corrects a common mistake:** Google-Extended does **not** opt you out of AI Overviews or AI Mode; those use Googlebot. Google: "You don't need to create new machine readable files, AI text files, or markup to appear in these features" ([source](https://developers.google.com/search/docs/appearance/ai-features)).
+- **Experimental opt-ins (v0.5):** llms.txt / llms-full.txt and markdown alternates. No proven visibility benefit; off by default.
+- **Won't do:** GEO scores, `speakable`, HowTo, FAQ rich-result promises, or any claim that it gets you ranked or cited.
 
 ## Design principles
 
@@ -40,13 +49,15 @@ Details and sources: [Research](docs/research.md).
 ## Features (planned)
 
 - **Typed metadata builders** — `createMetadata` (site defaults, title template, `metadataBase`), `pageMetadata` (canonical, OG/Twitter filled from title/description), `mergeMetadata` (deep merge, since Next merges per top-level key). ([Metadata](docs/metadata.md))
-- **Typed JSON-LD** — builders for common Google rich-result types with required fields enforced by TypeScript, and a `<JsonLd>` Server Component with XSS-safe serialization; accepts schema-dts values. ([JSON-LD](docs/json-ld.md))
+- **Typed JSON-LD** — builders for common schema.org types with Google-required fields enforced by TypeScript, a `<JsonLd>` Server Component with XSS-safe serialization, and an **entity graph by default** (Organization/Person with stable `@id`, `sameAs`, `author` by `@id`); accepts schema-dts values. No rich-result promises: FAQ rich results are limited to government/health sites, HowTo is gone. ([JSON-LD](docs/json-ld.md))
 - **Sitemaps from your `app/` routes** — `herald routes` scans `app/`, `defineSitemap` requires a typed `params` enumerator for every dynamic route; image, video and language alternates. ([Sitemaps](docs/sitemaps.md))
 - **Large sites** — split at 50,000 URLs / 50 MB with a generated sitemap index; Google News sitemaps. ([ADR 0007](docs/adr/0007-sitemap-index-via-route-handlers.md))
-- **Robots** — `robots.ts` with automatic sitemap lines, preview lock-down and an optional AI-crawler list. ([Robots](docs/robots.md))
+- **Robots** — `robots.ts` with automatic sitemap lines, preview lock-down and AI-crawler rules **by purpose** (training / search / user-fetch; search allowed by default). ([Robots](docs/robots.md))
 - **hreflang** — reciprocal alternates and `x-default` from one `I18nSource`; optional [next-tongue](https://github.com/MrLouisWright/next-tongue) adapter, recipes for next-intl and Paraglide. ([hreflang & i18n](docs/i18n-hreflang.md))
 - **OG image templates** — typed JSX templates on `next/og` `ImageResponse`, no bundled fonts. ([OG images](docs/og-images.md))
-- **`herald check`** — crawls a running server or a static export for missing/duplicate titles and descriptions, broken canonicals, hreflang reciprocity, `noindex` leaks, sitemap/robots consistency, structured data validity and OG image size; `pretty`, `json`, GitHub annotations and SARIF output. ([CLI & rules](docs/cli.md))
+- **`herald check`** — crawls a running server or a static export for missing/duplicate titles and descriptions, broken canonicals, hreflang reciprocity, `noindex` leaks, sitemap/robots consistency, structured data validity and OG image size, plus no-JS content visibility, bot/browser parity, broken internal links, Lighthouse-equivalent basics, accurate `lastmod` and AI-crawler robots mistakes; `pretty`, `json`, GitHub annotations and SARIF output. ([CLI & rules](docs/cli.md))
+- **`herald indexnow`** — CLI that submits changed sitemap URLs to IndexNow (Bing, Yandex and others; not Google). ([CLI](docs/cli.md#herald-indexnow-v05))
+- **Experimental (opt-in, v0.5)** — static markdown alternate routes and llms.txt / llms-full.txt. No proven visibility benefit. ([AEO stance](docs/aeo.md))
 - **Cache Components and static export safe** — pure builders; works with `cacheComponents: true` and `output: 'export'`. ([Cache Components](docs/cache-components.md), [Static export](docs/static-export.md))
 
 ## Quick start (planned API)
@@ -128,25 +139,30 @@ Full walkthrough: [Getting started](docs/getting-started.md).
 
 ## Comparison
 
-Feature-level comparison as of October 2026. next-herald's column is **planned**, not shipped. Weekly downloads from api.npmjs.org (2026-10-06 → 10-12).
+Feature-level comparison as of October 2026. next-herald's column is **planned**, not shipped. Weekly downloads from api.npmjs.org (2026-10-06 → 10-12). Nuxt SEO is the best-in-class benchmark; next-herald aims at Nuxt SEO parity for Next.js.
 
-| | next-herald (planned) | Native Next.js 16 | next-seo 7.3 | next-sitemap 4.2.3 | schema-dts 2.1 |
-|---|---|---|---|---|---|
-| Status | pre-alpha | stable | active (Jul 2026) | last release Sep 2023 | active (Oct 2026) |
-| Downloads/week | — | — | 472,622 | 638,748 | 3,138,833 |
-| Runtime dependencies | 0 (peers `next`, `react`) | — | 0 | 4 | 1 (`schema-dts-lib`) |
-| Meta tags | builds native `Metadata` | `metadata` / `generateMetadata` | recommends native in App Router; `<NextSeo>` for Pages | — | — |
-| Deep merge across segments | yes | no (per top-level key) | — | — | — |
-| JSON-LD | typed builders + XSS-safe `<JsonLd>` | guide only | components | — | types only |
-| Sitemap | native `sitemap.ts` from `app/` routes | `sitemap.ts`, `generateSitemaps` | — | postbuild files in `public/` | — |
-| Sitemap index > 50k | yes (route handler) | split only, no index | — | yes | — |
-| News sitemap | yes | no | — | no | — |
-| hreflang alternates | from one `I18nSource` | manual | `languageAlternates` (Pages) | `alternateRefs` | — |
-| OG image templates | yes (`next/og`) | `ImageResponse` | — | — | — |
-| CI checker | `herald check` | — | — | — | — |
-| Pages Router | no | — | yes | yes | n/a |
+| | next-herald (planned) | Native Next.js 16 | next-seo 7.3 | next-sitemap 4.2.3 | schema-dts 2.1 | Nuxt SEO 6.0 | Astro (@astrojs/sitemap 3.7) |
+|---|---|---|---|---|---|---|---|
+| Status | pre-alpha | stable | active (Jul 2026) | last release Sep 2023 | active (Oct 2026) | active | active |
+| Downloads/week | — | — | 472,622 | 638,748 | 3,138,833 | @nuxtjs/seo 124,014; sitemap 306,316 | 3,814,836 |
+| Runtime dependencies | 0 (peers `next`, `react`) | — | 0 | 4 | 1 (`schema-dts-lib`) | > 0 | > 0 |
+| Meta tags | builds native `Metadata` | `metadata` / `generateMetadata` | recommends native in App Router; `<NextSeo>` for Pages | — | — | `useSeoMeta` + site config | community (astro-seo) |
+| Deep merge across segments | yes | no (per top-level key) | — | — | — | yes | — |
+| JSON-LD | typed builders + XSS-safe `<JsonLd>` | guide only | components | — | types only | `@graph` with `@id` linking | manual |
+| Entity graph (`@id`, `sameAs`) | yes, by default (v0.2) | — | — | — | — | yes | — |
+| Sitemap | native `sitemap.ts` from `app/` routes | `sitemap.ts`, `generateSitemaps` | — | postbuild files in `public/` | — | yes | yes |
+| Sitemap index > 50k | yes (route handler) | split only, no index | — | yes | — | yes | yes |
+| News sitemap | yes | no | — | no | — | yes | — |
+| Accurate `lastmod` source | content dates, `--git-lastmod`, checks | manual | — | build time | — | yes | option |
+| hreflang alternates | from one `I18nSource` | manual | `languageAlternates` (Pages) | `alternateRefs` | — | via i18n | i18n option |
+| AI crawlers by purpose | training / search / user-fetch | manual | — | — | — | robots groups + Content-Signal | — |
+| llms.txt | experimental opt-in (v0.5) | — | — | — | — | nuxt-llms | third party |
+| OG image templates | yes (`next/og`) | `ImageResponse` | — | — | — | nuxt-og-image | third party |
+| Broken internal links | `link-broken` | — | — | — | — | link checker | — |
+| CI checker | `herald check` (no browser) | — | — | — | — | partial (link checker, devtools) | — |
+| Pages Router | no | — | yes | yes | n/a | n/a | n/a |
 
-Sources in [Research](docs/research.md). Corrections welcome — open an issue if any cell is wrong.
+Sources in [Research](docs/research.md) and the [SEO/AEO review](docs/seo-aeo-review.md). Corrections welcome — open an issue if any cell is wrong.
 
 ## Documentation
 
@@ -164,6 +180,7 @@ Also available as a [GitHub wiki](https://github.com/MrLouisWright/next-herald/w
 | [OG images](docs/og-images.md) | [Security](docs/security.md) |
 | [Cache Components & PPR](docs/cache-components.md) | [Research (Oct 2026)](docs/research.md) |
 | [Static export](docs/static-export.md) | [Critical review](docs/review.md) |
+| [AEO stance](docs/aeo.md) | [SEO/AEO review](docs/seo-aeo-review.md) |
 | [Migration from next-seo](docs/migration/next-seo.md) | [Docs index](docs/README.md) |
 | [Migration from next-sitemap](docs/migration/next-sitemap.md) | |
 
@@ -172,15 +189,15 @@ Also available as a [GitHub wiki](https://github.com/MrLouisWright/next-herald/w
 | Milestone | Theme |
 |---|---|
 | v0.1 | **Core builders, ship fast:** config, metadata builders, `<JsonLd>` + 7 types, basic sitemap/robots, CI with dependency budget |
-| v0.2 | `herald check` core (titles, descriptions, canonicals, noindex, sitemap/robots) + `herald routes` |
-| v0.3 | Large sites & i18n: sitemap index, news, hreflang, next-tongue adapter, static export |
-| v0.4 | OG templates, JSON-LD and OG check rules, more schema types, SARIF |
-| v0.5 | `herald init`, verified migration guides, published size/perf report |
+| v0.2 | `herald check` core (titles, descriptions, canonicals, noindex, sitemap/robots, no-JS visibility, links, Lighthouse-equivalent basics, AI-crawler robots) + `herald routes` + entity graph |
+| v0.3 | Large sites & i18n: sitemap index, news, hreflang, next-tongue adapter, static export, accurate `lastmod` |
+| v0.4 | OG templates, JSON-LD, OG, citation-friendly structure and entity rules, more schema types, SARIF |
+| v0.5 | `herald init`, `herald indexnow`, verified migration guides, published size/perf report, AI referral docs; experimental markdown alternates and llms.txt |
 | v0.9 | Beta: API and rule-ID freeze |
 | v1.0 | Stable, semver guarantees |
 | post-1.0 | next-seo / next-sitemap codemods |
 
-**Scope freeze:** no new features before v0.1 ships.
+**Scope freeze:** no new features before v0.1 ships. The approved SEO/AEO additions (2026-10-14) land in v0.2+; in v0.1 only the `defineRobots` AI option shape changes ([#11](https://github.com/MrLouisWright/next-herald/issues/11)).
 
 Full detail with acceptance criteria: [ROADMAP.md](ROADMAP.md) · [Milestones](https://github.com/MrLouisWright/next-herald/milestones) · [Project board](https://github.com/users/MrLouisWright/projects/8).
 
