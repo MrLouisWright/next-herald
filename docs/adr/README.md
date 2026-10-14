@@ -15,5 +15,6 @@ Format: [MADR](https://adr.github.io/madr/)-lite. Status values: Proposed · Acc
 | [0009](0009-cli-config-and-route-scan.md) | Config loading and the route manifest | Accepted |
 | [0010](0010-optional-next-tongue-integration.md) | next-tongue integration is optional and structural | Accepted |
 | [0011](0011-og-templates-on-next-og.md) | OG templates are plain JSX on `next/og` | Accepted |
+| [0012](0012-ai-crawler-policy-and-aeo-stance.md) | AI crawler policy by purpose; evidence-based AEO stance | Accepted |
 
 New ADR: copy [template.md](template.md), next number, open a PR labelled `type: adr`.
