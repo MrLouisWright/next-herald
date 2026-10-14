@@ -2,9 +2,11 @@
 
 > **Status: pre-alpha.** Dates are not promised. Each milestone ships when its acceptance criteria are met. Tracked in [GitHub milestones](https://github.com/MrLouisWright/next-herald/milestones), issues and the [project board](https://github.com/users/MrLouisWright/projects/8).
 
-> **Scope freeze (2026-10-14):** no new features are added to any milestone before v0.1 ships. v0.1 is intentionally small so it can ship fast.
+> **Scope freeze (firm, 2026-10-14):** no new features are added to any milestone before v0.1 ships. v0.1 is intentionally small so it can ship fast. Issues #57–#61 are the last additions before v0.1; any further feature request goes to *Considered, not scheduled* below or to a discussion, and is triaged only after `0.1.0` is published. Bug fixes, docs corrections and v0.1 acceptance criteria are not features.
 >
 > **Amendment (2026-10-14):** the maintainer approved the [SEO/AEO review](https://github.com/MrLouisWright/next-herald/blob/main/docs/seo-aeo-review.md). Its additions are scheduled in v0.2–v0.5 (issues #45–#56). The only v0.1 change is the API shape of the AI-crawler option in #11 (plus docs fixes in #10), because it must be right before it ships. See [AEO stance](https://github.com/MrLouisWright/next-herald/blob/main/docs/aeo.md) and [ADR 0012](https://github.com/MrLouisWright/next-herald/blob/main/docs/adr/0012-ai-crawler-policy-and-aeo-stance.md).
+>
+> **Amendment 2 (2026-10-14):** the maintainer approved five features, scheduled after v0.1 with no change to v0.1: [SEO preview panel](https://github.com/MrLouisWright/next-herald/blob/main/docs/preview-panel.md) (#57), [redirect manager](https://github.com/MrLouisWright/next-herald/blob/main/docs/redirects.md) (#58), [pagination and faceted URLs](https://github.com/MrLouisWright/next-herald/blob/main/docs/pagination.md) (#59) in v0.3; [image SEO](https://github.com/MrLouisWright/next-herald/blob/main/docs/images.md) (#60) and [`herald check --diff`](https://github.com/MrLouisWright/next-herald/blob/main/docs/check-diff.md) (#61) in v0.4. The scope freeze above applies from here on.
 
 **Constraints for every milestone:** zero dependencies beyond the `next` and `react` peers ([ADR 0002](https://github.com/MrLouisWright/next-herald/blob/main/docs/adr/0002-zero-dependencies.md), [#3](https://github.com/MrLouisWright/next-herald/issues/3)); no request APIs in library code ([ADR 0006](https://github.com/MrLouisWright/next-herald/blob/main/docs/adr/0006-cache-components-safety.md), [#7](https://github.com/MrLouisWright/next-herald/issues/7)); Next.js 16 App Router only ([ADR 0003](https://github.com/MrLouisWright/next-herald/blob/main/docs/adr/0003-nextjs-16-only.md)).
 
@@ -143,7 +145,7 @@ Scope: Zero-dep crawler and head scanner, title/description/canonical/noindex/si
 ## v0.3 — Large sites & i18n
 Goal: Sites with >50k URLs, news publishers and multilingual sites.
 
-Scope: Sitemap index splitting, news sitemaps, hreflang, next-tongue adapter, hreflang rules, static export, accurate lastmod.
+Scope: Sitemap index splitting, news sitemaps, hreflang, next-tongue adapter, hreflang rules, static export, accurate lastmod, dev-only SEO preview panel, redirect manager, pagination and faceted URL helpers.
 
 **Issues and acceptance criteria**
 
@@ -173,11 +175,29 @@ Scope: Sitemap index splitting, news sitemaps, hreflang, next-tongue adapter, hr
   - [ ] `herald routes --git-lastmod` writes commit dates at build time (`node:child_process`, no dep); clear error on shallow clones.
   - [ ] Implements lastmod-future, lastmod-uniform (≥ 90% identical), lastmod-mismatch (> 1 day vs JSON-LD/OG).
   - [ ] Never defaults to build time.
+- **[#57](https://github.com/MrLouisWright/next-herald/issues/57) Dev-only SEO preview panel: Google snippet, OG/X cards, chat link preview, live check warnings**
+  - [ ] `<HeraldPreview />` from `next-herald/preview` (Client Component) renders `null` unless `process.env.NODE_ENV === 'development'`; the production bundle of `examples/basic` contains no preview code (asserted by a bundle grep in e2e) and client JS added in production stays 0.
+  - [ ] Reads the rendered `document.head` / DOM on the client only; no `headers()`, `cookies()` or request APIs anywhere (guard #7); pages stay static under `cacheComponents: true`.
+  - [ ] Shows a Google result snippet (title, URL breadcrumb, description, truncated at documented pixel/char widths), OG card (`summary_large_image` and `summary`), X card and a generic chat link preview (title, description, image, site name).
+  - [ ] Live warnings run the page-level rules from `checkHtml` (`next-herald/testing`) against the current DOM and update on client navigation; each warning links to its rule on the CLI page.
+  - [ ] Docs state previews are approximations of each platform, not pixel-exact; no dependencies beyond `next`/`react` (#3).
+- **[#58](https://github.com/MrLouisWright/next-herald/issues/58) Redirect manager: typed rules for next.config redirects or proxy, and redirect-chain/loop/temporary rules**
+  - [ ] `defineRedirects(config, rules)` from `next-herald/redirects` validates rules at load (source starts with `/`, no duplicate sources, destination absolute or root-relative, `permanent` defaults to `true`) with errors naming the rule index.
+  - [ ] `.toNextConfig()` returns the exact `Redirect[]` shape of `next.config` `redirects()`; `.match(pathname)` is a pure function usable from the user's own `proxy.ts` (the library never reads headers or cookies).
+  - [ ] Build-time validation reports chains (A→B→C) and loops within the rule set before deploy; `herald build` fails on loops.
+  - [ ] Implements `redirect-chain` (warn), `redirect-loop` (error) and `redirect-temporary` (warn) in `herald check`, with failing fixtures.
+  - [ ] Docs cover static export (`output: 'export'` has no redirects: emit a host config recipe instead) and zero dependencies (#3).
+- **[#59](https://github.com/MrLouisWright/next-herald/issues/59) Pagination and faceted URL helpers with a params-duplicate-content rule**
+  - [ ] `listingMetadata(config, { path, params, indexable, pageParam?, drop? })` in `next-herald/metadata` returns a self-referencing canonical for page N (never canonicalises page 2+ to page 1), strips `drop` params (sort, `utm_*`), orders kept params stably, and sets `noindex, follow` for non-indexable facet combinations.
+  - [ ] Takes params as a plain object passed by the caller; the library never reads `searchParams` or headers itself. Docs explain that reading `searchParams` makes a route dynamic and show the static `[[...facets]]` path-segment alternative.
+  - [ ] `listingHref(path, params, opts)` builds the same normalised URLs for links, so internal links match canonicals.
+  - [ ] Implements `params-duplicate-content` (warn) and `pagination-canonical-first` (warn) with fixtures.
+  - [ ] No `rel=prev/next` promise (Google no longer uses it); zero dependencies (#3).
 
 ## v0.4 — OG images & structured data checks
 Goal: Social previews and structured data validation.
 
-Scope: OG templates, OG and JSON-LD rules, citation-friendly structure and entity rules, schema types batch 2, SARIF.
+Scope: OG templates, OG and JSON-LD rules, citation-friendly structure and entity rules, schema types batch 2, SARIF, image SEO, `herald check --diff`.
 
 **Issues and acceptance criteria**
 
@@ -205,6 +225,17 @@ Scope: OG templates, OG and JSON-LD rules, citation-friendly structure and entit
   - [ ] Docs: consistency checks, not ranking or citation factors.
 - **[#52](https://github.com/MrLouisWright/next-herald/issues/52) Rules: entity consistency**
   - [ ] Implements jsonld-entity-id, sameas-inconsistent, jsonld-deprecated-type.
+- **[#60](https://github.com/MrLouisWright/next-herald/issues/60) Image SEO: image sitemap entries from next/image usage and route data, plus image rules**
+  - [ ] `herald routes --images` statically scans `app/` for `next/image` `<Image>` with literal or statically imported `src` and writes them to `routes[i].images` in `herald-routes.gen.ts` (own tokenizer, Node built-ins only); dynamic `src` values come from `entry()` route data.
+  - [ ] `defineSitemap` merges both sources into native `images` entries: absolute, deduped, at most 1,000 per URL (Google's limit), `/_next/image` URLs resolved to the original source.
+  - [ ] Missing alt reuses `img-alt-missing` (#51), raised from info to warn for images listed in the image sitemap; adds `img-dimensions-missing` (warn), `img-format-legacy` (info) and `sitemap-image-status` (error) with fixtures.
+  - [ ] Dimensions and type read from file headers with the #31 readers; no image decoding library; zero dependencies (#3).
+- **[#61](https://github.com/MrLouisWright/next-herald/issues/61) herald check --diff <base>: report only SEO changes against a base build or branch, markdown/SARIF for PRs**
+  - [ ] `herald check --snapshot <file>` writes a deterministic JSON snapshot (per URL: status, title, description, canonical, robots, hreflang, JSON-LD types; sitemap URL set).
+  - [ ] `--diff <base>` accepts a snapshot file or a git ref; for a ref it builds the base in a temporary `git worktree` (`node:child_process`, no dependency) and cleans it up.
+  - [ ] Reports only changes: `diff-noindex-added` (error), `diff-canonical-changed` (warn), `diff-sitemap-url-removed` (warn), `diff-title-changed` (info), `diff-description-changed` (info), `diff-status-changed` (warn).
+  - [ ] `--format markdown` produces a PR-comment-ready summary (collapsed per-URL details, capped length); `--format sarif` reuses #34 and validates against SARIF 2.1.0.
+  - [ ] Exit code 1 only when a diff finding is `error`; GitHub Actions recipe documented; zero dependencies (#3).
 
 ## v0.5 — Adoption
 Goal: Make adoption easy and back the README with published numbers.
@@ -283,4 +314,6 @@ Scope: next-seo and next-sitemap codemods.
 ## Not planned
 See [rejected ideas](https://github.com/MrLouisWright/next-herald/blob/main/docs/research.md#rejected-ideas): head components, postbuild files in `public/`, headless browser crawling, request-derived URLs, Pages Router. AEO hype rejected: [research](https://github.com/MrLouisWright/next-herald/blob/main/docs/research.md#aeo-rejected-and-hype) (GEO scores, `speakable`, HowTo, Indexing API for ordinary pages, Accept negotiation in library code).
 
-Considered, not scheduled: Content-Signal / Content-Usage passthrough in robots.txt ([AEO stance](https://github.com/MrLouisWright/next-herald/blob/main/docs/aeo.md#considered-not-scheduled)).
+Considered, not scheduled:
+- Content-Signal / Content-Usage passthrough in robots.txt ([AEO stance](https://github.com/MrLouisWright/next-herald/blob/main/docs/aeo.md#considered-not-scheduled)).
+- Search Console / Bing Webmaster API reports (pulling indexing, coverage or performance data into `herald check` or a report). Needs OAuth credentials and network calls to third-party APIs, which do not fit a dependency-free CI check; revisit after v1.0.

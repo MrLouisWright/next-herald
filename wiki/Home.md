@@ -9,6 +9,7 @@
 - [[Getting Started|Getting-Started]] · [[Configuration|Configuration]]
 - [[Metadata|Metadata]] · [[JSON-LD|JSON-LD]] · [[Sitemaps|Sitemaps]] · [[Robots|Robots]] · [[hreflang and i18n|hreflang-and-i18n]] · [[OG Images|OG-Images]]
 - [[CLI and Check Rules|CLI-and-Check-Rules]] · [[Cache Components and PPR|Cache-Components-and-PPR]] · [[Static Export|Static-Export]] · [[AEO stance|AEO-Stance]]
+- [[SEO Preview Panel|SEO-Preview-Panel]] · [[Redirects|Redirects]] · [[Pagination and Facets|Pagination-and-Facets]] · [[Image SEO|Image-SEO]] · [[Check Diff Mode|Check-Diff-Mode]]
 - Migration: [[from next-seo|Migration-from-next-seo]] · [[from next-sitemap|Migration-from-next-sitemap]]
 
 ## Project

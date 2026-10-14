@@ -7,9 +7,10 @@ The `herald` binary uses Node built-ins only ([ADR 0002](https://github.com/MrLo
 | Command | Since | Purpose |
 |---|---|---|
 | `herald init [--large] [--i18n]` | v0.5 | Scaffold `herald.config.ts`, `app/sitemap.ts`, `app/robots.ts` (`--large`: index + chunks) |
-| `herald routes [--watch] [--git-lastmod]` | v0.2 (`--git-lastmod` v0.3) | Scan `app/`, write `herald-routes.gen.ts`; `--git-lastmod` adds each route file's last commit date at build time ([#50](https://github.com/MrLouisWright/next-herald/issues/50)) |
-| `herald build` | v0.2 | `routes` + config validation; use in `prebuild` |
+| `herald routes [--watch] [--git-lastmod] [--images]` | v0.2 (`--git-lastmod` v0.3, `--images` v0.4) | Scan `app/`, write `herald-routes.gen.ts`; `--git-lastmod` adds each route file's last commit date at build time ([#50](https://github.com/MrLouisWright/next-herald/issues/50)); `--images` adds `next/image` sources for image sitemaps ([Image SEO](Image-SEO), [#60](https://github.com/MrLouisWright/next-herald/issues/60)) |
+| `herald build` | v0.2 | `routes` + config validation; use in `prebuild` (fails on redirect loops from v0.3, [#58](https://github.com/MrLouisWright/next-herald/issues/58)) |
 | `herald check` | v0.2 | Crawl and report |
+| `herald check --diff <base>` | v0.4 | Report only SEO changes against a snapshot or git ref ([Diff mode](Check-Diff-Mode), [#61](https://github.com/MrLouisWright/next-herald/issues/61)) |
 | `herald indexnow [--changed --previous <file>] [--urls <file>] [--dry-run] [--init-key]` | v0.5 | Submit changed sitemap URLs to IndexNow ([#53](https://github.com/MrLouisWright/next-herald/issues/53)) |
 
 ## `herald check`
@@ -18,7 +19,7 @@ herald check --url http://localhost:3000        # running server
 herald check --dir out                          # static export
 herald check --build                            # next build && next start on a free port, then crawl
 ```
-Options: `--seed /path` (repeatable), `--max-pages 5000`, `--concurrency 8`, `--timeout 10000`, `--format pretty|json|github|sarif`, `--env production|preview`, `--rule id=off|info|warn|error`, `--ignore '/drafts/**'`, `--ignore-robots`, `--ua bot|browser|<string>` (default `bot`, a UA matched by Next's `htmlLimitedBots`), `--site-url` (when crawling a preview URL for a production config: rewrites canonical/hreflang host comparison).
+Options: `--seed /path` (repeatable), `--max-pages 5000`, `--concurrency 8`, `--timeout 10000`, `--format pretty|json|github|sarif|markdown` (`markdown` v0.4), `--env production|preview`, `--rule id=off|info|warn|error`, `--ignore '/drafts/**'`, `--ignore-robots`, `--ua bot|browser|<string>` (default `bot`, a UA matched by Next's `htmlLimitedBots`), `--site-url` (when crawling a preview URL for a production config: rewrites canonical/hreflang host comparison), `--snapshot <file>` and `--diff <snapshot|git-ref>` (v0.4, [diff mode](Check-Diff-Mode)).
 
 Seeds: `/`, `robots.txt` → sitemaps (index → chunks), `--seed`s, then same-origin links. It reads server HTML only, never `.next/` ([ADR 0008](https://github.com/MrLouisWright/next-herald/blob/main/docs/adr/0008-check-crawls-http.md)). Exit code: 1 if any `error`, 2 on crawl failure (e.g. server unreachable), else 0.
 
@@ -93,7 +94,7 @@ Severity is the default; override in `check.rules` config or `--rule`. IDs are s
 | `h1-missing` | info | v0.4 | No `<h1>` ([#51](https://github.com/MrLouisWright/next-herald/issues/51)) |
 | `h1-multiple` | info | v0.4 | More than one `<h1>` ([#51](https://github.com/MrLouisWright/next-herald/issues/51)) |
 | `heading-order` | info | v0.4 | Skipped heading levels ([#51](https://github.com/MrLouisWright/next-herald/issues/51)) |
-| `img-alt-missing` | info | v0.4 | `<img>` without `alt` in main content ([#51](https://github.com/MrLouisWright/next-herald/issues/51)) |
+| `img-alt-missing` | info | v0.4 | `<img>` without `alt` in main content; warn for images in the image sitemap ([#51](https://github.com/MrLouisWright/next-herald/issues/51), [#60](https://github.com/MrLouisWright/next-herald/issues/60)) |
 | `jsonld-date-missing` | info | v0.4 | Article without `dateModified` ([#51](https://github.com/MrLouisWright/next-herald/issues/51)) |
 | `jsonld-author` | warn | v0.4 | Article `author` missing, or a string instead of Person/Organization with `name` ([#51](https://github.com/MrLouisWright/next-herald/issues/51)) |
 | `jsonld-visible-mismatch` | warn | v0.4 | JSON-LD `headline`/`name` absent from visible h1/title; Product price absent from text ([#51](https://github.com/MrLouisWright/next-herald/issues/51)) |
@@ -103,8 +104,22 @@ Severity is the default; override in `check.rules` config or `--rule`. IDs are s
 | `md-alternate-broken` | error | v0.5 | `rel=alternate type=text/markdown` target non-200 or wrong content type (experimental, [#54](https://github.com/MrLouisWright/next-herald/issues/54)) |
 | `llms-txt-invalid` | warn | v0.5 | `/llms.txt` present but not in the llmstxt.org shape, or its links non-200. Absence is never reported (experimental, [#55](https://github.com/MrLouisWright/next-herald/issues/55)) |
 | `indexnow-key-missing` | warn | v0.5 | IndexNow configured but the key file is not served ([#53](https://github.com/MrLouisWright/next-herald/issues/53)) |
+| `redirect-chain` | warn | v0.3 | More than one redirect hop before a 200 ([Redirects](Redirects), [#58](https://github.com/MrLouisWright/next-herald/issues/58)) |
+| `redirect-loop` | error | v0.3 | Redirects that never reach a final response ([#58](https://github.com/MrLouisWright/next-herald/issues/58)) |
+| `redirect-temporary` | warn | v0.3 | 302/307 where a permanent redirect is intended: rule declared `permanent`, or URL in a sitemap or linked internally ([#58](https://github.com/MrLouisWright/next-herald/issues/58)) |
+| `params-duplicate-content` | warn | v0.3 | ≥ 2 indexable URLs that differ only in search params with the same title and body text, each self-canonical ([Pagination](Pagination-and-Facets), [#59](https://github.com/MrLouisWright/next-herald/issues/59)) |
+| `pagination-canonical-first` | warn | v0.3 | Page 2+ of a listing canonicalises to page 1 ([#59](https://github.com/MrLouisWright/next-herald/issues/59)) |
+| `img-dimensions-missing` | warn | v0.4 | `<img>` without `width` and `height` ([Image SEO](Image-SEO), [#60](https://github.com/MrLouisWright/next-herald/issues/60)) |
+| `img-format-legacy` | info | v0.4 | JPEG/PNG/GIF over 100 KB (configurable) without a WebP/AVIF alternative ([#60](https://github.com/MrLouisWright/next-herald/issues/60)) |
+| `sitemap-image-status` | error | v0.4 | Image sitemap URL non-200 or not an image content type ([#60](https://github.com/MrLouisWright/next-herald/issues/60)) |
+| `diff-noindex-added` | error | v0.4 | `--diff` only: URL indexable in base is `noindex` now ([Diff mode](Check-Diff-Mode), [#61](https://github.com/MrLouisWright/next-herald/issues/61)) |
+| `diff-canonical-changed` | warn | v0.4 | `--diff` only: canonical target changed ([#61](https://github.com/MrLouisWright/next-herald/issues/61)) |
+| `diff-sitemap-url-removed` | warn | v0.4 | `--diff` only: URL in base sitemap missing now ([#61](https://github.com/MrLouisWright/next-herald/issues/61)) |
+| `diff-status-changed` | warn | v0.4 | `--diff` only: HTTP status changed ([#61](https://github.com/MrLouisWright/next-herald/issues/61)) |
+| `diff-title-changed` | info | v0.4 | `--diff` only: title changed ([#61](https://github.com/MrLouisWright/next-herald/issues/61)) |
+| `diff-description-changed` | info | v0.4 | `--diff` only: description changed ([#61](https://github.com/MrLouisWright/next-herald/issues/61)) |
 
-These 27 rules (from `content-js-only` to `lastmod-mismatch` and `h1-missing` to `indexnow-key-missing`) were added by the [SEO/AEO review](SEO-AEO-Review). The structure rules are consistency checks, not ranking or citation factors.
+These 27 rules (from `content-js-only` to `lastmod-mismatch` and `h1-missing` to `indexnow-key-missing`) were added by the [SEO/AEO review](SEO-AEO-Review). The structure rules are consistency checks, not ranking or citation factors. The 14 rules from `redirect-chain` to `diff-description-changed` belong to the approved features #58–#61; the `diff-*` rules run only with `--diff`.
 
 Limits: no JavaScript execution, on purpose: content injected client-side is invisible, as it is for most AI crawlers ([Vercel, Dec 2024](https://vercel.com/blog/the-rise-of-the-ai-crawler)). `content-js-only` and `content-bot-parity` make that visible. Image dimensions are read from file headers; animated/complex formats may be reported as `og-image-type`.
 

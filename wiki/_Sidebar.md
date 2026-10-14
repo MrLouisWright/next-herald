@@ -14,6 +14,11 @@
 - [[Static Export|Static-Export]]
 - [[Testing|Testing]]
 - [[AEO Stance|AEO-Stance]]
+- [[SEO Preview Panel|SEO-Preview-Panel]]
+- [[Redirects|Redirects]]
+- [[Pagination and Facets|Pagination-and-Facets]]
+- [[Image SEO|Image-SEO]]
+- [[Check Diff Mode|Check-Diff-Mode]]
 - [[Migration from next seo|Migration-from-next-seo]]
 - [[Migration from next sitemap|Migration-from-next-sitemap]]
 

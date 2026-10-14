@@ -16,7 +16,12 @@
 11. [Static export](static-export.md)
 12. [Testing](testing.md)
 13. [AEO stance: answer engines and AI search](aeo.md)
-14. Migration: [from next-seo](migration/next-seo.md) · [from next-sitemap](migration/next-sitemap.md)
+14. [SEO preview panel (dev only)](preview-panel.md)
+15. [Redirect manager](redirects.md)
+16. [Pagination and faceted URLs](pagination.md)
+17. [Image SEO](images.md)
+18. [`herald check --diff`](check-diff.md)
+19. Migration: [from next-seo](migration/next-seo.md) · [from next-sitemap](migration/next-sitemap.md)
 
 ## Reference
 - [API reference](api-reference.md)
@@ -34,12 +39,14 @@
 | Import | Runs in | Purpose |
 |---|---|---|
 | `next-herald/config` | anywhere | `defineHerald` |
-| `next-herald/metadata` | Server (layouts, pages, `generateMetadata`) | `createMetadata`, `mergeMetadata`, `pageMetadata` |
+| `next-herald/metadata` | Server (layouts, pages, `generateMetadata`) | `createMetadata`, `mergeMetadata`, `pageMetadata`, `listingMetadata` (v0.3) |
 | `next-herald/jsonld` | Server Components | `JsonLd`, `serializeJsonLd`, `jsonLd.*` builders, schema types |
 | `next-herald/sitemap` | `sitemap.ts`, route handlers | `defineSitemap`, `splitSitemap`, `sitemapIndex`, `newsSitemap` |
 | `next-herald/robots` | `robots.ts` | `defineRobots` |
 | `next-herald/i18n` | Server | `alternates`, `fromTongue` |
 | `next-herald/og` | `opengraph-image.tsx` | `ogImage`, templates |
+| `next-herald/preview` | Client, `next dev` only (v0.3) | `HeraldPreview` (renders nothing in production) |
+| `next-herald/redirects` | `next.config.ts`, `proxy.ts` (v0.3) | `defineRedirects` |
 | `next-herald/experimental` | route handlers (v0.5, opt-in) | `markdownRoute`, `markdownAlternate`, `defineLlmsTxt`, `defineLlmsFullTxt` |
 | `next-herald/testing` | tests | `checkHtml`, `renderMetadata` |
 | `herald` (bin) | Node built-ins only | `init`, `routes`, `build`, `check`, `indexnow` |

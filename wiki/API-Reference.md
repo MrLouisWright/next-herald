@@ -12,6 +12,8 @@ All functions are pure unless noted. Types are exported from the same entry poin
 - `pageMetadata(config, input: PageInput): Metadata` — `PageInput = { path: string; title?: string | { absolute: string }; description?: string; images?: OgImageInput[]; type?: 'website' | 'article' | 'profile'; publishedTime?; modifiedTime?; authors?: string[]; tags?: string[]; noindex?: boolean; locale?: string; locales?: string[]; keepQuery?: boolean; extra?: Metadata }`
 - `mergeMetadata(...parts: (Metadata | undefined)[]): Metadata` — deep merge for `openGraph`, `twitter`, `robots`, `alternates`, `other`; arrays replaced.
 - `canonicalUrl(config, path): string`
+- `listingMetadata(config, { path, params, indexable, pageParam?, drop?, title?, description? }): Metadata` — canonical/robots for filtered, sorted and paginated pages; `params` is a plain object you pass (v0.3, [Pagination](Pagination-and-Facets))
+- `listingHref(path, params, { indexable, pageParam?, drop? }): string` — the same normalised URL for links
 
 ## `next-herald/jsonld`
 - `<JsonLd data: JsonLdInput | JsonLdInput[] nonce?: string />` (Server Component)
@@ -28,6 +30,7 @@ All functions are pure unless noted. Types are exported from the same entry poin
 - `sitemapIndex(source, { path }): (req: Request) => Promise<Response>`
 - `newsSitemap(config, { publication, articles }): (req: Request) => Promise<Response>`
 - `sitemapImage(input)`, `sitemapVideo(input)`
+- `routes[i].images` from `herald routes --images` (`next/image` sources) merged with `entry()` images: absolute, deduped, ≤ 1,000 per URL (v0.4, [Image SEO](Image-SEO))
 - `lastModified` comes from your data (`entry()`), or from the manifest written by `herald routes --git-lastmod` (`routes[i].lastModified`, build time). Never defaulted to build time (v0.3, [#50](https://github.com/MrLouisWright/next-herald/issues/50))
 - `SitemapSource = { count(): Promise<number>; page(index: number, size: number): Promise<SitemapEntry[]> }`
 
@@ -46,6 +49,14 @@ All functions are pure unless noted. Types are exported from the same entry poin
 - `ogImage(Template, props, { fonts?, size?, emoji? }): ImageResponse`
 - `ogSize` = `{ width: 1200, height: 630 }`
 - `SimpleCard`, `ArticleCard`, `ProductCard`
+
+## `next-herald/preview` (v0.3, dev only)
+- `<HeraldPreview position? defaultOpen? rules? />` (Client Component) — Google snippet, OG/X cards, chat link preview and live `checkHtml` warnings; `null` unless `NODE_ENV === 'development'` ([Preview panel](SEO-Preview-Panel))
+
+## `next-herald/redirects` (v0.3)
+- `defineRedirects(config, rules: RedirectRule[]): Redirects` — `RedirectRule = { source: string; destination: string; permanent?: boolean /* default true */; has?; missing? }`
+- `redirects.toNextConfig(): Redirect[]` — for `next.config` `redirects()`
+- `redirects.match(pathname): { destination: string; status: 301 | 302 | 307 | 308 } | null` — pure; call it from your own `proxy.ts` ([Redirects](Redirects))
 
 ## `next-herald/experimental` (v0.5, opt-in)
 No proven search or AI-citation benefit; may change or be removed before v0.9 ([AEO stance](AEO-Stance)). Everything returns `force-static` route handlers that use only `params`, never request headers.
