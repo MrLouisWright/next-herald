@@ -42,7 +42,7 @@ Open upstream issues (all open on 2026-10-14):
 | [#87314](https://github.com/vercel/next.js/issues/87314) | `sitemap.ts` and `sitemap.xml/route.ts` conflict | Large-site mode has no `sitemap.ts` |
 | [#99055](https://github.com/vercel/next.js/issues/99055) | `revalidate` sitemap emitted as static in adapter outputs | Documented |
 | [#99715](https://github.com/vercel/next.js/issues/99715) | Metadata routes send `max-age=0` instead of `s-maxage` | Documented |
-| [#98007](https://github.com/vercel/next.js/issues/98007) | Route handlers (incl. sitemaps) not compressed by `next start` | Gzip option for the index handler considered (v0.3) |
+| [#98044](https://github.com/vercel/next.js/pull/98044) | Route handlers (incl. sitemaps) not compressed by `next start` | Gzip option for the index handler considered (v0.3) |
 | [#54665](https://github.com/vercel/next.js/issues/54665) | `sitemap.ts` with custom `pageExtensions` | `herald routes` reads `pageExtensions` from config |
 
 ### schema-dts and others
